@@ -75,7 +75,13 @@ def create_builder():
 
     if is_linux:  # Issue #42
         libs.append('rt')  # -lrt for clock_gettime
-    libs.append('ssl')
+
+        libdirs.append('/tmp/openssl/lib')
+        libs.append('ssl')  # openssl/lib/libssl.a
+        libs.append('crypto')  # openssl/lib/libcrypto.a
+        incdirs.append(LRMQSRC('unix'))  # include threads.h only for linux; haven't tested for windows
+        incdirs.append('/tmp/openssl/include')
+
     librabbitmq_ext = Extension(
         '_librabbitmq',
         sources=list(PyC_files) + list(librabbit_files),
@@ -99,7 +105,6 @@ def create_builder():
     class build(_build):
         stdcflags = [
             '-DHAVE_CONFIG_H',
-            '-DENABLE_SSL_SUPPORT=ON',
         ]
         if os.environ.get('PEDANTIC'):
             # Python.h breaks -pedantic, so can only use it while developing.
@@ -129,19 +134,19 @@ def create_builder():
                 try:
            
                     if not os.path.isdir(os.path.join(LRMQDIST(), '.git')):
-                         print('- pull submodule rabbitmq-c...')
-                         if os.path.isfile('Makefile'):
-                             os.system(' '.join([make, 'submodules']))
-                         else:
-                             os.system(' '.join(['git', 'clone', '-b', 'v0.9.0',
-                                 'https://github.com/alanxz/rabbitmq-c.git',
-                                 'rabbitmq-c']))
+                        print('- pull submodule rabbitmq-c...')
+                        if os.path.isfile('Makefile'):
+                            os.system(' '.join([make, 'submodules']))
+                        else:
+                            os.system(' '.join(['git', 'clone', '-b', 'v0.9.0',
+                                                'https://github.com/alanxz/rabbitmq-c.git',
+                                                'rabbitmq-c']))
 
                     os.chdir(LRMQDIST())
 
                     print('- cmake')
                     os.system('cmake .')
-                    print(' -build')
+                    print('- build')
                     os.system('cmake --build .')
                 finally:
                     os.environ.update(restore)
@@ -157,7 +162,7 @@ def create_builder():
     return librabbitmq_ext, build
 
 
-def find_make(alt=('gmake', 'gnumake', 'make', 'nmake','cmake')):
+def find_make(alt=('gmake', 'gnumake', 'make', 'nmake', 'cmake')):
     for path in os.environ['PATH'].split(':'):
         for make in (os.path.join(path, m) for m in alt):
             if os.path.isfile(make):
