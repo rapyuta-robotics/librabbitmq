@@ -6,10 +6,10 @@ set -e -x
 yum  install -y librabbmitmq-devel make librabbitmq python-devel gcc automake cmake
 
 # Build openssl
-./build-openssl.sh
+/workspace/build-openssl.sh
 
 cd /workspace
-PYBIN=/opt/python/cp27-cp27mu/bin
+PYBIN="/opt/python/cp27-cp27mu/bin"
 ${PYBIN}/pip wheel /workspace/ -w wheelhouse/
 auditwheel repair wheelhouse/librabbitmq-2.0.0-cp27-cp27mu-linux_x86_64.whl -w /workspace/wheelhouse/
 ${PYBIN}/pip install librabbitmq -f /workspace/wheelhouse

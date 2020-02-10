@@ -145,7 +145,10 @@ def create_builder():
                     os.chdir(LRMQDIST())
 
                     print('- cmake')
-                    os.system('cmake .')
+                    os.system('cmake -DOPENSSL_CRYPTO_LIBRARY=/tmp/openssl/lib/libcrypto.a'
+                              ' -DOPENSSL_SSL_LIBRARY=/tmp/openssl/lib/libssl.a'
+                              ' -DOPENSSL_INCLUDE_DIR=/tmp/openssl/include'
+                              ' .')
                     print('- build')
                     os.system('cmake --build .')
                 finally:

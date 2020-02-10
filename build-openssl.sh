@@ -1,4 +1,5 @@
 #!/bin/bash
+# requires build tools: gcc & make
 set -e -x
 
 OPENSSL_VERSION="1.0.2"
