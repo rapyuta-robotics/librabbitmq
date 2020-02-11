@@ -10,6 +10,7 @@ BASE_PATH = os.path.dirname(__file__)
 LRMQDIST = lambda *x: os.path.join(BASE_PATH, 'rabbitmq-c', *x)
 LRMQSRC = lambda *x: LRMQDIST('librabbitmq', *x)
 PYCP = lambda *x: os.path.join(BASE_PATH, 'Modules', '_librabbitmq', *x)
+OPENSSL = lambda *x: os.path.join('/tmp', 'openssl', *x)
 
 
 def senv(*k__v, **kwargs):
@@ -76,11 +77,11 @@ def create_builder():
     if is_linux:  # Issue #42
         libs.append('rt')  # -lrt for clock_gettime
 
-        libdirs.append('/tmp/openssl/lib')
+        libdirs.append(OPENSSL('lib'))
         libs.append('ssl')  # openssl/lib/libssl.a
         libs.append('crypto')  # openssl/lib/libcrypto.a
         incdirs.append(LRMQSRC('unix'))  # include threads.h only for linux; haven't tested for windows
-        incdirs.append('/tmp/openssl/include')
+        incdirs.append(OPENSSL('include'))
 
     librabbitmq_ext = Extension(
         '_librabbitmq',
@@ -145,10 +146,13 @@ def create_builder():
                     os.chdir(LRMQDIST())
 
                     print('- cmake')
-                    os.system('cmake -DOPENSSL_CRYPTO_LIBRARY=/tmp/openssl/lib/libcrypto.a'
-                              ' -DOPENSSL_SSL_LIBRARY=/tmp/openssl/lib/libssl.a'
-                              ' -DOPENSSL_INCLUDE_DIR=/tmp/openssl/include'
-                              ' .')
+                    os.system(' '.join([
+                        'cmake',
+                        '-DOPENSSL_CRYPTO_LIBRARY=' + OPENSSL('lib', 'libcrypto.a'),
+                        '-DOPENSSL_SSL_LIBRARY=' + OPENSSL('lib', 'libssl.a'),
+                        '-DOPENSSL_INCLUDE_DIR=' + OPENSSL('include'),
+                        '.',
+                    ]))
                     print('- build')
                     os.system('cmake --build .')
                 finally:
