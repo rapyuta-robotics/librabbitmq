@@ -8,7 +8,8 @@ PYTHON=python
 all: build
 
 add-submodules:
-	git submodule add -b v0.9.0 https://github.com/alanxz/rabbitmq-c.git
+	git submodule add https://github.com/alanxz/rabbitmq-c.git
+	cd rabbitmq-c && git checkout v0.9.0
 
 submodules:
 	git submodule init
