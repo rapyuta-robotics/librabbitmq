@@ -5,6 +5,10 @@ set -e -x
 # Install a system package required by our library
 yum  install -y librabbmitmq-devel make librabbitmq python-devel gcc automake cmake
 
+# cmake version compatible with rabbitmq-c
+curl -o /tmp/cmake.sh https://cmake.org/files/v3.5/cmake-3.5.1-Linux-x86_64.sh
+sh /tmp/cmake.sh --skip-license --exclude-subdir --prefix=/usr/local
+
 # Build openssl
 /workspace/build-openssl.sh
 
@@ -12,7 +16,7 @@ cd /workspace
 PYBIN="/opt/python/cp27-cp27mu/bin"
 ${PYBIN}/pip wheel /workspace/ -w wheelhouse/
 auditwheel repair wheelhouse/librabbitmq-2.0.0-cp27-cp27mu-linux_x86_64.whl -w /workspace/wheelhouse/
-${PYBIN}/pip install librabbitmq -f /workspace/wheelhouse
+${PYBIN}/pip install wheelhouse/librabbitmq-2.0.0-cp27-cp27mu-manylinux1_x86_64.whl
 ${PYBIN}/python -c "import librabbitmq"
 
 # # Compile wheels

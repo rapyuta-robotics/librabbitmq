@@ -148,9 +148,12 @@ def create_builder():
                     print('- cmake')
                     os.system(' '.join([
                         'cmake',
+                        '-DENABLE_SSL_SUPPORT=ON',
                         '-DOPENSSL_CRYPTO_LIBRARY=' + OPENSSL('lib', 'libcrypto.a'),
                         '-DOPENSSL_SSL_LIBRARY=' + OPENSSL('lib', 'libssl.a'),
                         '-DOPENSSL_INCLUDE_DIR=' + OPENSSL('include'),
+                        '-DBUILD_EXAMPLES=OFF',
+                        '-DBUILD_TOOLS=OFF',
                         '.',
                     ]))
                     print('- build')
@@ -169,7 +172,7 @@ def create_builder():
     return librabbitmq_ext, build
 
 
-def find_make(alt=('gmake', 'gnumake', 'make', 'nmake', 'cmake')):
+def find_make(alt=('gmake', 'gnumake', 'make', 'nmake')):
     for path in os.environ['PATH'].split(':'):
         for make in (os.path.join(path, m) for m in alt):
             if os.path.isfile(make):

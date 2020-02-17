@@ -1,3 +1,4 @@
 [submodule "rabbitmq-c"]
 	path = rabbitmq-c
 	url = https://github.com/alanxz/rabbitmq-c.git
+	branch = v0.9.0

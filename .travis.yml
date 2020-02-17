@@ -1,12 +1,15 @@
 language: python
+python:
+  - "2.7"
 dist: trusty
 sudo: required
 
 install:
   - pip install -r requirements/test-ci.txt
+  - pip install wheelhouse/librabbitmq-2.0.0-cp27-cp27mu-manylinux1_x86_64.whl
 
 script:
-  - make test
+  - nosetests -w tests
 
 services:
   - rabbitmq
