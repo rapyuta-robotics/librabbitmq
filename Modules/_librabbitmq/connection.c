@@ -8,7 +8,7 @@
 #include <amqp.h>
 #include <amqp_tcp_socket.h>
 #include <amqp_ssl_socket.h>
-#include <amqp_ssl_socket.h>
+#include <amqp_time.h>
 #include <amqp_framing.h>
 
 #include "connection.h"
@@ -1828,14 +1828,17 @@ bail:
 /*
  * Connection._basic_publish
  */
-static PyObject*
+static PyObject *
 PyRabbitMQ_Connection_basic_publish(PyRabbitMQ_Connection *self,
                                     PyObject *args)
 {
     PyObject *exchange = NULL;
     PyObject *routing_key = NULL;
     PyObject *propdict;
-    amqp_frame_t frame;
+    amqp_method_t out_method;
+    amqp_time_t timeout;
+    if (amqp_time_s_from_now(&timeout, 5) != AMQP_STATUS_OK)
+        goto bail;
 
     unsigned int channel = 0;
     unsigned int mandatory = 0;
@@ -1849,21 +1852,25 @@ PyRabbitMQ_Connection_basic_publish(PyRabbitMQ_Connection *self,
     amqp_basic_properties_t props;
     amqp_bytes_t bytes;
     amqp_pool_t *channel_pool = NULL;
+
     memset(&props, 0, sizeof(props));
 
     if (PyRabbitMQ_Not_Connected(self))
         goto bail;
 
     if (!PyArg_ParseTuple(args, "Is#OOO|II",
-            &channel, &body_buf, &body_size, &exchange, &routing_key,
-            &propdict, &mandatory, &immediate))
+                          &channel, &body_buf, &body_size, &exchange, &routing_key,
+                          &propdict, &mandatory, &immediate))
         goto bail;
-    if ((exchange = Maybe_Unicode(exchange)) == NULL) goto bail;
-    if ((routing_key = Maybe_Unicode(routing_key)) == NULL) goto bail;
+    if ((exchange = Maybe_Unicode(exchange)) == NULL)
+        goto bail;
+    if ((routing_key = Maybe_Unicode(routing_key)) == NULL)
+        goto bail;
 
     Py_INCREF(propdict);
     channel_pool = amqp_get_or_create_channel_pool(self->conn, (amqp_channel_t)channel);
-    if (PyDict_to_basic_properties(propdict, &props, self->conn, channel_pool) < 1) {
+    if (PyDict_to_basic_properties(propdict, &props, self->conn, channel_pool) < 1)
+    {
         goto bail;
     }
     Py_DECREF(propdict);
@@ -1879,19 +1886,22 @@ PyRabbitMQ_Connection_basic_publish(PyRabbitMQ_Connection *self,
                              (amqp_boolean_t)immediate,
                              &props,
                              bytes);
-    if (self->confirmed){
-      status = amqp_simple_wait_frame_on_channel(self->conn,channel,&frame);
+    if (self->confirmed)
+    {
+        //status = amqp_simple_wait_frame_on_channel(self->conn,channel,&frame);
+        amqp_method_number_t expected_methods[] = {AMQP_BASIC_ACK_METHOD, AMQP_BASIC_NACK_METHOD, 0};
+        status = amqp_simple_wait_method_list(self->conn, channel, &expected_methods, timeout, &out_method);
     }
     amqp_maybe_release_buffers_on_channel(self->conn, channel);
     Py_END_ALLOW_THREADS;
 
-    if (!PyRabbitMQ_HandleError(ret, "basic.publish")) {
+    if (!PyRabbitMQ_HandleError(ret, "basic.publish"))
+    {
         goto error;
     }
-    if ((self->confirmed) && (status != AMQP_STATUS_OK) &&
-        (frame.frame_type != AMQP_FRAME_METHOD) &&
-        (frame.payload.method.id != AMQP_BASIC_ACK_METHOD )){
-      goto error;
+    if ((self->confirmed) && (status != AMQP_STATUS_OK) && (out_method.id != AMQP_BASIC_ACK_METHOD))
+    {
+        goto error;
     }
     Py_RETURN_NONE;
 
