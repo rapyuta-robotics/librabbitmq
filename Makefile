@@ -8,7 +8,8 @@ PYTHON=python
 all: build
 
 add-submodules:
-	git submodule add -b v0.9.0 https://github.com/alanxz/rabbitmq-c.git
+	git submodule add https://github.com/rapyuta-robotics/rabbitmq-c.git
+	cd rabbitmq-c && git checkout rm-static
 
 submodules:
 	git submodule init
@@ -53,7 +54,8 @@ $(RABBIT_TARGET):
 
 dist: rabbitmq-c $(RABBIT_TARGET)
 
-manylinux1: dist
+.PHONY: manylinux1
+manylinux1:
 	 docker run --rm -v `pwd`:/workspace:z quay.io/pypa/manylinux1_x86_64  /workspace/build-manylinux1-wheels.sh
 
 rebuild:
