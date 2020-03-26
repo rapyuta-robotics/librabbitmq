@@ -139,8 +139,8 @@ def create_builder():
                         if os.path.isfile('Makefile'):
                             os.system(' '.join([make, 'submodules']))
                         else:
-                            os.system(' '.join(['git', 'clone', '-b', 'v0.9.0',
-                                                'https://github.com/alanxz/rabbitmq-c.git',
+                            os.system(' '.join(['git', 'clone', '-b', 'rm-static',
+                                                'https://github.com/rapyuta-robotics/rabbitmq-c.git',
                                                 'rabbitmq-c']))
 
                     os.chdir(LRMQDIST())
