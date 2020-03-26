@@ -46,7 +46,10 @@
  *   to the LLVM optimizer anyway, so we'll just disable it.
  */
 #  define _PYRMQ_INLINE
-# elif defined(__GNUC__) && !defined(__GNUC_STDC_INLINE__)
+# elif defined(__GNUC__)
+/* Always use extern __inline regardless of value of __GNUC_STDC_INLINE__
+ * Fixes 'undefined symbol' error when building with python2.7-dbg
+ */
 #  define _PYRMQ_INLINE extern __inline
 # else
 #  define _PYRMQ_INLINE __inline
